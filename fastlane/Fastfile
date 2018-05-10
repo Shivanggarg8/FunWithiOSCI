@@ -18,88 +18,109 @@ default_platform(:ios)
 platform :ios do
   
 
-	desc 'Do basic setup, as installing cocoapods dependencies and fetching profiles, before start integration.' 
-	lane :before_integration do ensure_git_status_clean
+	# desc 'Do basic setup, as installing cocoapods dependencies and fetching profiles, before start integration.' 
+	# lane :before_integration do ensure_git_status_clean
 
-		plist_file = ENV['XL_TARGET_PLIST_FILE']
+	# 	plist_file = ENV['XL_TARGET_PLIST_FILE']
 
-		# This is a custom action that could be find in the libs/utils.rb
-		increase_build_number(plist_file)
+	# 	# This is a custom action that could be find in the libs/utils.rb
+	# 	increase_build_number(plist_file)
 
-		cocoapods
-		sigh(output_path: '/Library/Developer/XcodeServer/ProvisioningProfiles', skip_install: true)
-	end
+	# 	cocoapods
+	# 	sigh(output_path: '/Library/Developer/XcodeServer/ProvisioningProfiles', skip_install: true)
+	# end
 
 
-	desc 'Required tasks before integrate the staging app.' lane :before_integration_staging do ENV['XL_TARGET_PLIST_FILE'] = './MyAppStaging-Info.plist' before_integration end
+	# desc 'Required tasks before integrate the staging app.' lane :before_integration_staging do ENV['XL_TARGET_PLIST_FILE'] = './MyAppStaging-Info.plist' before_integration end
 
-	desc 'Required tasks before build the production app.' lane :before_integration_production do ENV['XL_TARGET_PLIST_FILE'] = './MyApp-Info.plist' before_integration end
+	# desc 'Required tasks before build the production app.' lane :before_integration_production do ENV['XL_TARGET_PLIST_FILE'] = './MyApp-Info.plist' before_integration end
 
-	desc 'Submit a new Beta Build to Apple iTunes Connect' lane :after_integration do branch = ENV['XL_BRANCH'] deliver_flag = ENV['XL_DELIVER_FLAG'].to_i plist_file = ENV['XL_TARGET_PLIST_FILE'] tag_base_path = ENV['XL_TAG_BASE_PATH'] tag_base_path = "#{tag_base_path}/" unless tag_base_path.nil? || tag_base_path == '' tag_link = ENV['XL_TAG_LINK'] target = ENV['XL_TARGET']
+	# desc 'Submit a new Beta Build to Apple iTunes Connect' lane :after_integration do branch = ENV['XL_BRANCH'] deliver_flag = ENV['XL_DELIVER_FLAG'].to_i plist_file = ENV['XL_TARGET_PLIST_FILE'] tag_base_path = ENV['XL_TAG_BASE_PATH'] tag_base_path = "#{tag_base_path}/" unless tag_base_path.nil? || tag_base_path == '' tag_link = ENV['XL_TAG_LINK'] target = ENV['XL_TARGET']
 
-		build_number = get_info_plist_value(
-  			path: plist_file,
-  			key: 'CFBundleVersion',
-		)
+	# 	build_number = get_info_plist_value(
+ #  			path: plist_file,
+ #  			key: 'CFBundleVersion',
+	# 	)
 
-		version_number = get_info_plist_value(
-			path: plist_file,
-  			key: 'CFBundleShortVersionString',
-		)
+	# 	version_number = get_info_plist_value(
+	# 		path: plist_file,
+ #  			key: 'CFBundleShortVersionString',
+	# 	)
 
-		ENV['XL_VERSION_NUMBER'] = "#{version_number}"
-		ENV['XL_BUILD_NUMBER'] = "#{build_number}"
+	# 	ENV['XL_VERSION_NUMBER'] = "#{version_number}"
+	# 	ENV['XL_BUILD_NUMBER'] = "#{build_number}"
 
-		tag_path = "#{tag_base_path}release_#{version_number}_#{build_number}"
-		tag_link = "#{tag_link}#{tag_path}"
-		update_changelog({
-  			name: tag_path,
-  			version: version_number,
-  			build: build_number,
-  			link: tag_link
-		})
+	# 	tag_path = "#{tag_base_path}release_#{version_number}_#{build_number}"
+	# 	tag_link = "#{tag_link}#{tag_path}"
+	# 	update_changelog({
+ #  			name: tag_path,
+ #  			version: version_number,
+ #  			build: build_number,
+ #  			link: tag_link
+	# 	})
 
-		ENV['XL_TAG_LINK'] = "#{tag_link}"
-		ENV['XL_TAG_PATH'] = "#{tag_path}"
+	# 	ENV['XL_TAG_LINK'] = "#{tag_link}"
+	# 	ENV['XL_TAG_PATH'] = "#{tag_path}"
 
-		sh "git config user.name 'CI Builder'"
-		sh "git config user.email 'builder@server.com'"
+	# 	sh "git config user.name 'CI Builder'"
+	# 	sh "git config user.email 'builder@server.com'"
 
-		git_commit(
-  			path: ["./CHANGELOG.md", plist_file],
-  			message: "Version bump to #{version_number} (#{build_number}) by CI Builder"
-		)
+	# 	git_commit(
+ #  			path: ["./CHANGELOG.md", plist_file],
+ #  			message: "Version bump to #{version_number} (#{build_number}) by CI Builder"
+	# 	)
 
-		if deliver_flag != 0
-  			ipa_folder = "#{ENV['XCS_DERIVED_DATA_DIR']}/deploy/#{version_number}.#{build_number}/"
-  			ipa_path = "#{ipa_folder}/#{target}.ipa"
-  			sh "mkdir -p #{ipa_folder}"
-  			sh "xcrun xcodebuild -exportArchive -archivePath \"#{ENV['XCS_ARCHIVE']}\" -exportPath \"#{ipa_path}\" -IDEPostProgressNotifications=YES -DVTAllowServerCertificates=YES -DVTSigningCertificateSourceLogLevel=3 -DVTSigningCertificateManagerLogLevel=3 -DTDKProvisioningProfileExtraSearchPaths=/Library/Developer/XcodeServer/ProvisioningProfiles -exportOptionsPlist './ExportOptions.plist'"
+	# 	if deliver_flag != 0
+ #  			ipa_folder = "#{ENV['XCS_DERIVED_DATA_DIR']}/deploy/#{version_number}.#{build_number}/"
+ #  			ipa_path = "#{ipa_folder}/#{target}.ipa"
+ #  			sh "mkdir -p #{ipa_folder}"
+ #  			sh "xcrun xcodebuild -exportArchive -archivePath \"#{ENV['XCS_ARCHIVE']}\" -exportPath \"#{ipa_path}\" -IDEPostProgressNotifications=YES -DVTAllowServerCertificates=YES -DVTSigningCertificateSourceLogLevel=3 -DVTSigningCertificateManagerLogLevel=3 -DTDKProvisioningProfileExtraSearchPaths=/Library/Developer/XcodeServer/ProvisioningProfiles -exportOptionsPlist './ExportOptions.plist'"
 
-  			# deliver(
-    	# 		force: true,
-    	# 		ipa: ipa_path
-  			# )
-		end
+ #  			# deliver(
+ #    	# 		force: true,
+ #    	# 		ipa: ipa_path
+ #  			# )
+	# 	end
 
-		add_git_tag(tag: tag_path)
+	# 	add_git_tag(tag: tag_path)
 
-		push_to_git_remote(local_branch: branch)
+	# 	push_to_git_remote(local_branch: branch)
 
-		push_git_tags
+	# 	push_git_tags
 
-	end
+	# end
 
-	desc "Deploy a new version of MyApp Staging to the App Store" lane :after_integration_staging do ENV['XL_BRANCH'] = current_branch ENV['XL_DELIVER_FLAG'] ||= '1' ENV['XL_TAG_BASE_PATH'] = 'beta' ENV['XL_TARGET_PLIST_FILE'] = './MyApp Staging-Info.plist' ENV['XL_TARGET'] = 'MyApp Staging' ENV['XL_TAG_LINK'] = 'https://github.com/xmartlabs/MyApp/releases/tag/'
+	# desc "Deploy a new version of MyApp Staging to the App Store" lane :after_integration_staging do ENV['XL_BRANCH'] = current_branch ENV['XL_DELIVER_FLAG'] ||= '1' ENV['XL_TAG_BASE_PATH'] = 'beta' ENV['XL_TARGET_PLIST_FILE'] = './MyApp Staging-Info.plist' ENV['XL_TARGET'] = 'MyApp Staging' ENV['XL_TAG_LINK'] = 'https://github.com/xmartlabs/MyApp/releases/tag/'
 
-		after_integration
-	end
+	# 	after_integration
+	# end
 
-	desc "Deploy a new version of MyApp to the App Store" lane :after_integration_production do ENV['XL_BRANCH'] = current_branch ENV['XL_DELIVER_FLAG'] ||= '1' ENV['XL_TARGET_PLIST_FILE'] = './MyApp-Info.plist' ENV['XL_TARGET'] = 'MyApp' ENV['XL_TAG_LINK'] = 'https://github.com/company/MyApp/releases/tag/'
+	# desc "Deploy a new version of MyApp to the App Store" lane :after_integration_production do ENV['XL_BRANCH'] = current_branch ENV['XL_DELIVER_FLAG'] ||= '1' ENV['XL_TARGET_PLIST_FILE'] = './MyApp-Info.plist' ENV['XL_TARGET'] = 'MyApp' ENV['XL_TAG_LINK'] = 'https://github.com/company/MyApp/releases/tag/'
 
-		after_integration
-	end 
-	end
+	# 	after_integration
+	# end 
+	# end
+
+	$tag = "#{app_version}-#{testflight_build_number}"
+	add_git_tag(
+       tag: "#{$tag}"
+	)
+
+	push_to_git_remote(
+      remote: "origin",
+      local_branch: "master",
+      remote_branch: "master",
+      tags: true
+	)
+	set_github_release(
+  		repository_name: "Shivanggarg8/FunWithiOSCI.git",
+  		api_token: "8a157049e46720067c7f1a63284b3a4ff08ba6af",
+  		name: "Upload Assets",
+  		tag_name: "#{$tag}",
+  		commitish: "master",
+  		upload_assets: ["./build/myapp.ipa", "./build/myapp.dSYMS"]
+	)
+
 
 
 end
